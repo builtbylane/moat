@@ -1,0 +1,28 @@
+{
+  "name": "moat",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Moat — a minimalist Chrome extension that blocks distracting sites with a toggle and a one-click 1-hour focus mode.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "type-check": "tsc --noEmit",
+    "test": "pnpm build && playwright test",
+    "test:headed": "pnpm build && playwright test --headed",
+    "test:install": "playwright install chromium",
+    "package": "pnpm build && rm -f ../../moat-$npm_package_version.zip && cd dist && zip -rq ../../../moat-$npm_package_version.zip .",
+    "screenshots": "pnpm build && node scripts/screenshots.mjs"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.32",
+    "@playwright/test": "^1.49.1",
+    "@types/chrome": "^0.0.287",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

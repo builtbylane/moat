@@ -1,0 +1,106 @@
+:root {
+  color-scheme: light dark;
+
+  --moat-font:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --moat-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --moat-bg: #ffffff;
+  --moat-surface: #f6f7f9;
+  --moat-surface-hover: #eceef2;
+  --moat-border: #e2e5eb;
+  --moat-border-strong: #c9ced8;
+  --moat-text: #0f1115;
+  --moat-text-muted: #5c6370;
+  --moat-text-faint: #8a909c;
+  --moat-accent: #1f6feb;
+  --moat-accent-strong: #1858c4;
+  --moat-accent-contrast: #ffffff;
+  --moat-danger: #b42318;
+  --moat-danger-bg: #fef3f2;
+  --moat-focus: #e6efff;
+  --moat-focus-ring: rgba(31, 111, 235, 0.35);
+  --moat-shadow: 0 1px 2px rgba(15, 17, 21, 0.06), 0 4px 14px rgba(15, 17, 21, 0.06);
+
+  --moat-radius-sm: 6px;
+  --moat-radius-md: 10px;
+  --moat-radius-lg: 14px;
+
+  --moat-space-1: 4px;
+  --moat-space-2: 8px;
+  --moat-space-3: 12px;
+  --moat-space-4: 16px;
+  --moat-space-5: 20px;
+  --moat-space-6: 24px;
+  --moat-space-8: 32px;
+
+  --moat-dur: 140ms;
+  --moat-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --moat-bg: #0e1014;
+    --moat-surface: #171a20;
+    --moat-surface-hover: #1f232b;
+    --moat-border: #242932;
+    --moat-border-strong: #323947;
+    --moat-text: #e9ecf2;
+    --moat-text-muted: #9aa2b1;
+    --moat-text-faint: #6a7384;
+    --moat-accent: #4f8cff;
+    --moat-accent-strong: #6a9dff;
+    --moat-accent-contrast: #0b0d11;
+    --moat-danger: #ff6b6b;
+    --moat-danger-bg: rgba(255, 107, 107, 0.12);
+    --moat-focus: rgba(79, 140, 255, 0.16);
+    --moat-focus-ring: rgba(79, 140, 255, 0.45);
+    --moat-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.35);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--moat-bg);
+  color: var(--moat-text);
+  font-family: var(--moat-font);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--moat-accent);
+  outline-offset: 2px;
+  border-radius: var(--moat-radius-sm);
+}
+
+.moat-wordmark {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

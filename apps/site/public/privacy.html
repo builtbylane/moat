@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Moat — privacy</title>
+    <meta name="description" content="Moat collects no data." />
+    <meta name="color-scheme" content="light dark" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='black'/%3E%3Cg transform='translate(16 16) scale(4)' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 5V3'/%3E%3Cpath d='M14 5V3'/%3E%3Cpath d='M15 21v-3a3 3 0 0 0-6 0v3'/%3E%3Cpath d='M18 3v8'/%3E%3Cpath d='M18 5H6'/%3E%3Cpath d='M22 11H2'/%3E%3Cpath d='M22 9v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9'/%3E%3Cpath d='M6 3v8'/%3E%3C/g%3E%3C/svg%3E"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Moat \u2014 Privacy",
+        "url": "https://moat.builtbylane.com/privacy",
+        "isPartOf": { "@type": "WebSite", "name": "Moat", "url": "https://moat.builtbylane.com" }
+      }
+    </script>
+    <style>
+      :root {
+        --fg: #0a0a0a;
+        --bg: #fafaf9;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #ededec;
+          --bg: #0a0a0a;
+        }
+      }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font: 400 13px/1.45 ui-monospace, Menlo, Consolas, monospace;
+        color: var(--fg);
+        background: var(--bg);
+        padding: 2rem 1.25rem 3rem;
+        max-width: 32rem;
+      }
+      p { margin: 0 0 0.85rem; }
+      a { color: inherit; }
+    </style>
+  </head>
+  <body>
+    <p><a href="/">Moat</a></p>
+    <p>~~~ privacy</p>
+    <p>No data is collected, stored, transmitted, or shared.</p>
+    <p>No servers. No analytics. No accounts. No third parties.</p>
+    <p>The blocklist lives in Chrome's built-in sync storage. That's it.</p>
+    <p>
+      Host permissions exist only so chrome.declarativeNetRequest can redirect blocked hosts.
+      Page content is never read.
+    </p>
+    <p>~~~</p>
+    <p>
+      Source: <a href="https://github.com/builtbylane/moat">github.com/builtbylane/moat</a>
+    </p>
+    <p>~~~</p>
+    <p>
+      2026-04-23 |
+      <a href="https://builtbylane.com">built by lane</a>
+    </p>
+  </body>
+</html>

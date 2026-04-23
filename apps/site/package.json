@@ -1,0 +1,9 @@
+{
+  "name": "site",
+  "private": true,
+  "version": "0.0.0",
+  "description": "moat.builtbylane.com — static marketing site for the Moat extension.",
+  "scripts": {
+    "build": "echo 'Static site — no build step required.'"
+  }
+}
