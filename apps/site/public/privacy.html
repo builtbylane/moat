@@ -21,23 +21,61 @@
     </script>
     <style>
       :root {
-        --fg: #000000;
-        --bg: #ffffff;
+        --fg: #000;
+        --bg: #fff;
       }
       html, body { margin: 0; padding: 0; }
       body {
-        font: 400 13px/1.45 ui-monospace, Menlo, Consolas, monospace;
+        font:
+          400 13px/1.55
+          ui-monospace,
+          "JetBrains Mono",
+          "Berkeley Mono",
+          "iA Writer Mono S",
+          "SF Mono",
+          Menlo,
+          "Cascadia Mono",
+          Consolas,
+          monospace;
         color: var(--fg);
         background: var(--bg);
-        padding: 2rem 1.25rem 3rem;
+        padding: 2.25rem 1.25rem 3rem;
         max-width: 32rem;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.005em;
+        text-rendering: optimizeLegibility;
       }
       p { margin: 0 0 0.85rem; }
       a { color: inherit; }
+      .mark {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55em;
+        text-decoration: underline;
+      }
+      .mark:hover { text-decoration: none; }
+      .mark svg {
+        flex: none;
+        display: block;
+      }
     </style>
   </head>
   <body>
-    <p><a href="/">Moat</a></p>
+    <p>
+      <a class="mark" href="/" aria-label="Moat home">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10 5V3"/>
+          <path d="M14 5V3"/>
+          <path d="M15 21v-3a3 3 0 0 0-6 0v3"/>
+          <path d="M18 3v8"/>
+          <path d="M18 5H6"/>
+          <path d="M22 11H2"/>
+          <path d="M22 9v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9"/>
+          <path d="M6 3v8"/>
+        </svg>
+        <span>Moat</span>
+      </a>
+    </p>
     <p>~~~ privacy</p>
     <p>No data is collected, stored, transmitted, or shared.</p>
     <p>No servers. No analytics. No accounts. No third parties.</p>
