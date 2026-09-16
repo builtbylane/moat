@@ -6,9 +6,12 @@ const FOCUS_KEY = 'focus';
 export async function getSettings(): Promise<Settings> {
   const got = await chrome.storage.sync.get(SETTINGS_KEY);
   const stored = got[SETTINGS_KEY] as Partial<Settings> | undefined;
+  const blocklist = Array.isArray(stored?.blocklist)
+    ? stored.blocklist.map(normalizeHost).filter((host): host is string => host !== null)
+    : [];
   return {
-    enabled: stored?.enabled ?? DEFAULT_SETTINGS.enabled,
-    blocklist: Array.isArray(stored?.blocklist) ? [...stored.blocklist] : [],
+    enabled: typeof stored?.enabled === 'boolean' ? stored.enabled : DEFAULT_SETTINGS.enabled,
+    blocklist: [...new Set(blocklist)].sort(),
   };
 }
 
@@ -21,6 +24,16 @@ export async function setSettings(patch: Partial<Settings>): Promise<void> {
 export async function getFocus(): Promise<FocusState | null> {
   const got = await chrome.storage.local.get(FOCUS_KEY);
   const stored = got[FOCUS_KEY] as FocusState | undefined;
+  if (
+    !stored ||
+    typeof stored.active !== 'boolean' ||
+    typeof stored.previousEnabled !== 'boolean' ||
+    !Number.isFinite(stored.startedAt) ||
+    !Number.isFinite(stored.endsAt) ||
+    stored.endsAt <= stored.startedAt
+  ) {
+    return null;
+  }
   return stored ?? null;
 }
 

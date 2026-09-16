@@ -32,6 +32,44 @@ let state: State = {
 };
 
 let tickHandle: number | null = null;
+let initialized = false;
+let loading = true;
+let pending = false;
+let error = '';
+let loadVersion = 0;
+
+async function withTimeout<T>(operation: Promise<T>): Promise<T> {
+  let timeout: number | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_resolve, reject) => {
+        timeout = window.setTimeout(
+          () => reject(new Error('Moat took too long to respond.')),
+          5000,
+        );
+      }),
+    ]);
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+async function runAction(action: () => Promise<void>): Promise<void> {
+  if (pending) return;
+  pending = true;
+  error = '';
+  render();
+  try {
+    await withTimeout(action());
+    await load();
+  } catch (err) {
+    error = err instanceof Error ? err.message : 'Couldn’t save your changes. Please try again.';
+  } finally {
+    pending = false;
+    render();
+  }
+}
 
 function formatRemaining(ms: number): string {
   const safe = Math.max(0, ms);
@@ -90,7 +128,10 @@ export function deriveCurrentHost(url: string | undefined, extensionOrigin: stri
 
 async function sendMessage(message: RuntimeMessage): Promise<void> {
   const response = (await chrome.runtime.sendMessage(message)) as RuntimeResponse | undefined;
-  if (response && response.ok === false) {
+  if (!response) {
+    throw new Error('Moat couldn’t respond. Reload the extension from Chrome’s Extensions page.');
+  }
+  if (response.ok === false) {
     throw new Error(response.error);
   }
 }
@@ -99,7 +140,15 @@ function ensureTicking(shouldTick: boolean): void {
   if (shouldTick && tickHandle === null) {
     tickHandle = window.setInterval(() => {
       state = { ...state, now: Date.now() };
-      render();
+      if (!isFocusActive(state.focus, state.now)) {
+        render();
+        return;
+      }
+      const remaining = formatRemaining((state.focus?.endsAt ?? state.now) - state.now);
+      const time = root?.querySelector('.focus-card__time');
+      const subtitle = root?.querySelector('.popup__status-subtitle');
+      if (time) time.textContent = remaining;
+      if (subtitle) subtitle.textContent = `Focus ends in ${remaining}`;
     }, 1000);
   } else if (!shouldTick && tickHandle !== null) {
     window.clearInterval(tickHandle);
@@ -148,17 +197,18 @@ function buildStatus(effective: boolean, focusActive: boolean): HTMLElement {
   toggleWrap.className = 'popup__status-toggle';
 
   const toggle = document.createElement('button');
+  toggle.id = 'blocking-toggle';
   toggle.type = 'button';
   toggle.className = 'switch';
   toggle.setAttribute('role', 'switch');
-  toggle.setAttribute('aria-checked', String(state.settings.enabled));
+  toggle.setAttribute('aria-checked', String(effective));
   toggle.setAttribute('aria-label', 'Blocking enabled');
   if (focusActive) {
     toggle.setAttribute('aria-disabled', 'true');
   }
   toggle.addEventListener('click', () => {
     if (focusActive) return;
-    void setSettings({ enabled: !state.settings.enabled });
+    void runAction(() => setSettings({ enabled: !state.settings.enabled }));
   });
 
   toggleWrap.append(toggle);
@@ -184,13 +234,14 @@ function buildSiteAction(host: string, isBlocked: boolean): HTMLElement {
   label.textContent = host;
 
   const btn = document.createElement('button');
+  btn.id = 'site-action';
   btn.type = 'button';
   if (isBlocked) {
     btn.className = 'btn btn--secondary';
     btn.textContent = 'Unblock this site';
     btn.addEventListener('click', () => {
       const filtered = state.settings.blocklist.filter((h) => h !== host);
-      void setSettings({ blocklist: filtered });
+      void runAction(() => setSettings({ blocklist: filtered }));
     });
   } else {
     btn.className = 'btn btn--accent-lite';
@@ -199,7 +250,7 @@ function buildSiteAction(host: string, isBlocked: boolean): HTMLElement {
       const next = Array.from(new Set([...state.settings.blocklist, host])).sort();
       const tabId = state.currentTabId;
       const shouldCloseTab = state.settings.enabled;
-      void (async () => {
+      void runAction(async () => {
         await setSettings({ blocklist: next });
         if (shouldCloseTab && tabId !== null) {
           try {
@@ -209,7 +260,7 @@ function buildSiteAction(host: string, isBlocked: boolean): HTMLElement {
           }
         }
         window.close();
-      })();
+      });
     });
   }
 
@@ -237,11 +288,12 @@ function buildFocusCard(): HTMLElement {
   head.append(label, time);
 
   const end = document.createElement('button');
+  end.id = 'end-focus';
   end.type = 'button';
   end.className = 'btn btn--secondary';
   end.textContent = 'End focus';
   end.addEventListener('click', () => {
-    void sendMessage({ kind: 'cancelFocus' });
+    void runAction(() => sendMessage({ kind: 'cancelFocus' }));
   });
 
   card.append(head, end);
@@ -255,15 +307,15 @@ function buildDurationPicker(): HTMLElement {
   wrap.setAttribute('aria-label', 'Focus duration');
 
   const options = FOCUS_DURATION_OPTIONS_MS;
-  const buttons: HTMLButtonElement[] = [];
-
-  const focusIndex = (idx: number) => {
-    const b = buttons[idx];
-    if (b) b.focus();
+  const selectDuration = (ms: number) => {
+    state = { ...state, selectedDurationMs: ms };
+    render();
+    root?.querySelector<HTMLButtonElement>('.duration-picker [aria-checked="true"]')?.focus();
   };
 
   options.forEach((ms, idx) => {
     const opt = document.createElement('button');
+    opt.id = `duration-${ms}`;
     opt.type = 'button';
     opt.className = 'duration-picker__segment';
     opt.setAttribute('role', 'radio');
@@ -272,8 +324,7 @@ function buildDurationPicker(): HTMLElement {
     opt.tabIndex = isSelected ? 0 : -1;
     opt.textContent = formatDurationSegment(ms);
     opt.addEventListener('click', () => {
-      state = { ...state, selectedDurationMs: ms };
-      render();
+      selectDuration(ms);
     });
     opt.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
@@ -281,39 +332,30 @@ function buildDurationPicker(): HTMLElement {
         const next = (idx + 1) % options.length;
         const nextMs = options[next];
         if (nextMs !== undefined) {
-          state = { ...state, selectedDurationMs: nextMs };
-          render();
-          focusIndex(next);
+          selectDuration(nextMs);
         }
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault();
         const prev = (idx - 1 + options.length) % options.length;
         const prevMs = options[prev];
         if (prevMs !== undefined) {
-          state = { ...state, selectedDurationMs: prevMs };
-          render();
-          focusIndex(prev);
+          selectDuration(prevMs);
         }
       } else if (e.key === 'Home') {
         e.preventDefault();
         const firstMs = options[0];
         if (firstMs !== undefined) {
-          state = { ...state, selectedDurationMs: firstMs };
-          render();
-          focusIndex(0);
+          selectDuration(firstMs);
         }
       } else if (e.key === 'End') {
         e.preventDefault();
         const last = options.length - 1;
         const lastMs = options[last];
         if (lastMs !== undefined) {
-          state = { ...state, selectedDurationMs: lastMs };
-          render();
-          focusIndex(last);
+          selectDuration(lastMs);
         }
       }
     });
-    buttons.push(opt);
     wrap.append(opt);
   });
 
@@ -331,9 +373,10 @@ function buildPrimaryAction(focusActive: boolean): HTMLElement {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'btn btn--primary';
+  btn.id = 'start-focus';
   btn.textContent = 'Start focus';
   btn.addEventListener('click', () => {
-    void sendMessage({ kind: 'startFocus', durationMs: state.selectedDurationMs });
+    void runAction(() => sendMessage({ kind: 'startFocus', durationMs: state.selectedDurationMs }));
   });
 
   wrap.append(picker, btn);
@@ -345,11 +388,12 @@ function buildFooter(): HTMLElement {
   footer.className = 'popup__footer';
 
   const link = document.createElement('button');
+  link.id = 'manage-sites';
   link.type = 'button';
   link.className = 'popup__footer-link';
   link.textContent = 'Manage blocked sites \u2192';
   link.addEventListener('click', () => {
-    chrome.runtime.openOptionsPage();
+    void runAction(() => chrome.runtime.openOptionsPage());
   });
 
   footer.append(link);
@@ -361,7 +405,39 @@ function render(): void {
   const effective = focusActive || state.settings.enabled;
 
   const next = document.createDocumentFragment();
-  next.append(buildHeader(), buildStatus(effective, focusActive));
+  next.append(buildHeader());
+
+  if (error) {
+    const message = document.createElement('p');
+    message.className = 'popup__error';
+    message.setAttribute('role', 'alert');
+    message.textContent = error;
+    next.append(message);
+  }
+
+  if (!initialized) {
+    if (loading) {
+      const message = document.createElement('p');
+      message.className = 'popup__message';
+      message.setAttribute('role', 'status');
+      message.textContent = 'Loading your settings…';
+      next.append(message);
+    } else {
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'btn btn--primary';
+      retry.textContent = 'Try again';
+      retry.addEventListener('click', () => void load());
+      next.append(retry);
+    }
+    next.append(buildFooter());
+    root?.replaceChildren(next);
+    root?.setAttribute('aria-busy', String(loading));
+    return;
+  }
+
+  const focusedId = document.activeElement?.id;
+  next.append(buildStatus(effective, focusActive));
 
   if (!focusActive && state.currentHost) {
     const isBlocked = state.settings.blocklist.includes(state.currentHost);
@@ -372,6 +448,11 @@ function render(): void {
 
   if (root) {
     root.replaceChildren(next);
+    root.setAttribute('aria-busy', String(pending));
+    for (const button of root.querySelectorAll('button')) {
+      button.disabled = pending;
+    }
+    if (focusedId) document.getElementById(focusedId)?.focus();
   }
   ensureTicking(focusActive);
 }
@@ -403,30 +484,44 @@ async function loadShortcut(): Promise<string | null> {
 }
 
 async function load(): Promise<void> {
-  const [settings, focus, tab, shortcut] = await Promise.all([
-    getSettings(),
-    getFocus(),
-    loadCurrentTab(),
-    loadShortcut(),
-  ]);
-  state = {
-    ...state,
-    settings,
-    focus,
-    now: Date.now(),
-    currentHost: tab.host,
-    currentTabId: tab.id,
-    shortcut,
-  };
-  render();
+  const version = ++loadVersion;
+  loading = true;
+  if (!initialized) {
+    error = '';
+    render();
+  }
+  try {
+    const [settings, focus] = await withTimeout(Promise.all([getSettings(), getFocus()]));
+    if (version !== loadVersion) return;
+    state = { ...state, settings, focus, now: Date.now() };
+    initialized = true;
+    error = '';
+  } catch {
+    if (version !== loadVersion) return;
+    error = 'Couldn’t load your settings. Try again, or reload Moat from Chrome’s Extensions page.';
+  } finally {
+    if (version === loadVersion) {
+      loading = false;
+      render();
+    }
+  }
 }
 
-subscribe(() => {
+const unsubscribe = subscribe(() => {
   void load();
 });
 
 window.addEventListener('pagehide', () => {
   ensureTicking(false);
+  unsubscribe();
 });
 
 void load();
+void loadCurrentTab().then((tab) => {
+  state = { ...state, currentHost: tab.host, currentTabId: tab.id };
+  render();
+});
+void loadShortcut().then((shortcut) => {
+  state = { ...state, shortcut };
+  render();
+});

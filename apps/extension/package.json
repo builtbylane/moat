@@ -1,7 +1,7 @@
 {
   "name": "moat",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Moat — a minimalist Chrome extension that blocks distracting sites with a toggle and a one-click 1-hour focus mode.",
   "type": "module",
   "scripts": {

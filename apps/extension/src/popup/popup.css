@@ -1,8 +1,10 @@
 html,
 body {
   width: 320px;
+  min-width: 320px;
+  min-height: 240px;
   border-radius: 4px;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 .popup {
@@ -21,6 +23,27 @@ body {
 
 .popup__header .moat-wordmark {
   font-size: 15px;
+}
+
+.popup__message {
+  margin: 0;
+  color: var(--moat-text-muted);
+  font-size: 12px;
+}
+
+.popup__error {
+  margin: 0;
+  padding: var(--moat-space-3);
+  color: var(--moat-danger);
+  background: var(--moat-danger-bg);
+  border-radius: var(--moat-radius-sm);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .popup__status {

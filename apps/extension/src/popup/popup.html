@@ -8,7 +8,18 @@
     <link rel="stylesheet" href="./popup.css" />
   </head>
   <body>
-    <main class="popup" id="app" aria-live="polite"></main>
+    <main class="popup" id="app" aria-busy="true">
+      <header class="popup__header"><span class="moat-wordmark">Moat</span></header>
+      <p class="popup__message" role="status">Loading your settings…</p>
+      <p class="popup__message">
+        If Moat doesn’t load, reload the extension from Chrome’s Extensions page.
+      </p>
+      <footer class="popup__footer">
+        <a class="popup__footer-link" href="../options/options.html" target="_blank">
+          Manage blocked sites
+        </a>
+      </footer>
+    </main>
     <script type="module" src="./popup.ts"></script>
   </body>
 </html>

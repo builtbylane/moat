@@ -16,6 +16,8 @@ A minimalist Chrome extension that blocks a list of sites you choose, with a cle
 
 ## Develop
 
+Run these commands from `apps/extension/` (or use `pnpm --filter moat` from the repository root).
+
 ```sh
 pnpm install
 pnpm build
@@ -25,7 +27,12 @@ Load the built extension in Chrome:
 
 1. Go to `chrome://extensions/`.
 2. Enable **Developer mode** (top-right).
-3. Click **Load unpacked** and choose the `dist/` folder.
+3. Click **Load unpacked** and choose `apps/extension/dist/` within the repository.
+4. After rebuilding, click **Reload** on Moat’s extension card.
+
+The repository root’s old `dist/` folder is not the workspace build output. For Chrome Web Store
+installations, run `pnpm package` to prepare a ZIP for publishing an update; rebuilding locally
+does not change the store-installed copy.
 
 Dev mode with HMR:
 
@@ -44,7 +51,9 @@ pnpm test:install   # once
 pnpm test
 ```
 
-Tests cover the popup toggle, blocklist CRUD on the options page, actual request redirection on a blocked host, and focus-mode start/cancel behavior.
+Tests cover the real toolbar popup, startup recovery after failed or stalled browser calls,
+keyboard navigation, the popup toggle, blocklist CRUD on the options page, actual request
+redirection on a blocked host, and focus-mode start/cancel behavior.
 
 ## Layout
 
